@@ -4,19 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <artifactId>hgs</artifactId>
+        <artifactId>hgs-redisson-framework</artifactId>
         <groupId>com.hgs</groupId>
         <version>${revision}</version>
     </parent>
 
+    <artifactId>hgs-service-delay-queue-framework</artifactId>
+    <name>hgs-service-delay-queue-framework</name>
+    <description>延迟队列</description>
 
-    <artifactId>hgs-redisson-framework</artifactId>
-    <name>hgs-redisson-framework</name>
-    <description>redisson组件封装</description>
-    <packaging>pom</packaging>
-
-    <modules>
-        <module>hgs-redisson-service-framework</module>
-        <module>hgs-service-delay-queue-framework</module>
-    </modules>
 </project>

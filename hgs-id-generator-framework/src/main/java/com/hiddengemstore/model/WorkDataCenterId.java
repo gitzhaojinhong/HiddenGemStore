@@ -4,7 +4,7 @@ import lombok.Data;
 
 /**
  * 工作节点ID和数据中心ID的数据模型
- * @author : Zhao
+ * @author : ZhaoJH
  */
 @Data
 public class WorkDataCenterId {

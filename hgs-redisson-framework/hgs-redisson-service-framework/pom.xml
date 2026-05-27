@@ -3,20 +3,23 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
-        <artifactId>hgs</artifactId>
+        <artifactId>hgs-redisson-framework</artifactId>
         <groupId>com.hgs</groupId>
         <version>${revision}</version>
     </parent>
 
-
-    <artifactId>hgs-redisson-framework</artifactId>
-    <name>hgs-redisson-framework</name>
-    <description>redisson组件封装</description>
+    <artifactId>hgs-redisson-service-framework</artifactId>
+    <name>hgs-redisson-service-framework</name>
+    <description>分布式服务工具</description>
     <packaging>pom</packaging>
 
     <modules>
-        <module>hgs-redisson-service-framework</module>
-        <module>hgs-service-delay-queue-framework</module>
+        <module>hgs-bloom-filter-framework</module>
+        <module>hgs-redisson-common-framework</module>
+        <module>hgs-service-lock-framework</module>
+        <module>hgs-repeat-execute-limit-framework</module>
     </modules>
+
 </project>

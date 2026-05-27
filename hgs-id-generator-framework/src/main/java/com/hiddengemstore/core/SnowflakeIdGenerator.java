@@ -17,9 +17,9 @@ import static com.hiddengemstore.core.IdGeneratorConstant.*;
 
 /**
  * 雪花算法ID生成器
- * 基于 MyBatis-Plus 源码魔改优化
+ * 基于 MyBatis-Plus 源码魔改优化,主要修改了机器ID与数据中心ID的生成方式 -- >redis获取
  * 支持：手动指定ID / Redis自动分配ID / 本地MAC+PID自动生成ID
- * @author : Zhao
+ * @author : ZhaoJH
  */
 @Slf4j
 public class SnowflakeIdGenerator {

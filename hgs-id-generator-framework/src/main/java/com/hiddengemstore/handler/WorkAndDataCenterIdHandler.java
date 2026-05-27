@@ -17,7 +17,7 @@ import java.util.List;
 /**
  * 工作节点ID和数据中心ID的分布式分配处理器,负责通过Redis Lua脚本.
  * 原子性地分配workerId（工作节点ID）和dataCenterId（数据中心ID）。
- * @author : Zhao
+ * @author : ZhaoJH
  */
 @Slf4j
 public class WorkAndDataCenterIdHandler {
@@ -31,7 +31,9 @@ public class WorkAndDataCenterIdHandler {
 
     private DefaultRedisScript<String> redisScript;
 
-    // 构造函数初始化 stringRedisTemplate 和 redisScript
+    /**
+     * 构造函数初始化 stringRedisTemplate 和 redisScript
+     */
     public WorkAndDataCenterIdHandler(StringRedisTemplate stringRedisTemplate) {
         this.stringRedisTemplate = stringRedisTemplate;
         try {
@@ -42,7 +44,10 @@ public class WorkAndDataCenterIdHandler {
             log.error("初始化Redis Lua脚本失败", e);
         }
     }
-    // 获取工作节点ID和数据中心ID
+
+    /**
+     * 获取工作节点ID和数据中心ID
+     */
     public WorkDataCenterId getWorkAndDataCenterId() {
         WorkDataCenterId workDataCenterId = new WorkDataCenterId();
         try {

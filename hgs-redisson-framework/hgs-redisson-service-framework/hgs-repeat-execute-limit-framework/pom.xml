@@ -4,19 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <artifactId>hgs</artifactId>
+        <artifactId>hgs-redisson-service-framework</artifactId>
         <groupId>com.hgs</groupId>
         <version>${revision}</version>
     </parent>
 
-
-    <artifactId>hgs-redisson-framework</artifactId>
-    <name>hgs-redisson-framework</name>
-    <description>redisson组件封装</description>
-    <packaging>pom</packaging>
-
-    <modules>
-        <module>hgs-redisson-service-framework</module>
-        <module>hgs-service-delay-queue-framework</module>
-    </modules>
+    <artifactId>hgs-repeat-execute-limit-framework</artifactId>
+    <name>hgs-repeat-execute-limit-framework</name>
+    <description>防重复执行幂等工具</description>
+    
 </project>

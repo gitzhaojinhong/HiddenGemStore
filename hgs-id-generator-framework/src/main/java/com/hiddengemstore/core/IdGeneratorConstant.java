@@ -2,7 +2,7 @@ package com.hiddengemstore.core;
 
 /**
  * 雪花算法相关常量定义（接口属性天然就是public static final）
- * @author : Zhao
+ * @author : ZhaoJH
  */
 public interface IdGeneratorConstant {
     /**
