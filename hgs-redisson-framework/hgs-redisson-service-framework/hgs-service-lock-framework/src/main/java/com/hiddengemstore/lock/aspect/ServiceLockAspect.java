@@ -1,7 +1,7 @@
 package com.hiddengemstore.lock.aspect;
 
 import cn.hutool.core.util.StrUtil;
-import com.hiddengemstore.constants.LockInfoType;
+import com.hiddengemstore.lockinfo.constants.LockInfoType;
 import com.hiddengemstore.lock.LockType;
 import com.hiddengemstore.lock.annotation.ServiceLock;
 import com.hiddengemstore.lock.factory.ServiceLockFactory;

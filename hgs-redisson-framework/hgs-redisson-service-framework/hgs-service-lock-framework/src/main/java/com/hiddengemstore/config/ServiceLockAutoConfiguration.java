@@ -1,6 +1,6 @@
 package com.hiddengemstore.config;
 
-import com.hiddengemstore.constants.LockInfoType;
+import com.hiddengemstore.lockinfo.constants.LockInfoType;
 import com.hiddengemstore.executor.ServiceLockExecutor;
 import com.hiddengemstore.handler.ServiceLockInfoHandle;
 import com.hiddengemstore.lock.aspect.ServiceLockAspect;
@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Bean;
 public class ServiceLockAutoConfiguration {
 
     /**
-     * 锁信息处理器
+     * 锁信息处理器，通过工厂指定bean名称获取
      * AOP中获取锁的名字解析处理器需要用到，所以需要提前注册
      */
     @Bean(LockInfoType.SERVICE_LOCK)

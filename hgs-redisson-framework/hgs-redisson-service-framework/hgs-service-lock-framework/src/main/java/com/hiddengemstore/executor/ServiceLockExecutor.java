@@ -1,6 +1,6 @@
 package com.hiddengemstore.executor;
 
-import com.hiddengemstore.constants.LockInfoType;
+import com.hiddengemstore.lockinfo.constants.LockInfoType;
 import com.hiddengemstore.lock.LockType;
 import com.hiddengemstore.lock.factory.ServiceLockFactory;
 import com.hiddengemstore.lock.locker.ServiceLocker;

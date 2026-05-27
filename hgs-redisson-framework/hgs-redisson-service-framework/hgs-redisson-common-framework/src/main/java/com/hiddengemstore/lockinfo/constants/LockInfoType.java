@@ -1,4 +1,4 @@
-package com.hiddengemstore.constants;
+package com.hiddengemstore.lockinfo.constants;
 
 /**
  * 锁信息类型常量
