@@ -26,11 +26,11 @@ public class DelayProduceQueue extends DelayBaseQueue {
 
     /**
      * 消息发送到队列
-     * @param context 消息
+     * @param content 消息
      * @param delayTime 延迟时间
      * @param timeUnit 时间单位
      */
-    public void offer(String context, long delayTime, TimeUnit timeUnit){
-        delayedQueue.offer(context,delayTime,timeUnit);
+    public void offer(String content, long delayTime, TimeUnit timeUnit){
+        delayedQueue.offer(content,delayTime,timeUnit);
     }
 }

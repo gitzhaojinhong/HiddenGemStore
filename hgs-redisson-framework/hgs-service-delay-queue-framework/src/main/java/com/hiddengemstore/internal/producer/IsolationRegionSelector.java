@@ -27,25 +27,20 @@ public class IsolationRegionSelector {
         this.thresholdValue = thresholdValue;
     }
 
-    /**
-     * 重置计数器并返回旧值
-     * 使用原子操作 getAndSet 保证线程安全，将计数器重置为 0 并返回重置前的值。
-     * @return 重置前的计数值
-     */
-    private int reset() {
-        return count.getAndSet(0);
-    }
 
     /**
-     * 获取下一个分区索引
+     * 获取当前分区索引
      * 采用轮询策略选择分区
      * 通过 synchronized 保证多线程环境下的安全性。
+     * 注意不要超出分区区间，如果区间为3，则索引为0、1、2
      * @return 当前选中的分区索引（从 0 开始）
      */
     public synchronized int getIndex(){
         int cur = count.get();
         if (cur >= thresholdValue) {
-            cur = reset();
+            // 计数器达到阈值，重置
+            count.set(0);
+            cur = 0;
         }else {
             count.incrementAndGet();
         }
