@@ -1,5 +1,6 @@
 # hgs-redis-framework 组件深度剖析
 
+
 ## 一、组件概述与功能定位
 
 `hgs-redis-framework` 是对 Spring Data Redis `StringRedisTemplate` 的二次封装组件，核心目标是解决以下痛点：
