@@ -1,5 +1,89 @@
 # hgs-redis-framework 组件深度剖析
 
+## 封装API速查
+
+#### String 操作
+
+| 方法                                   | 说明                                   |
+| -------------------------------------- | -------------------------------------- |
+| `get(key, clazz)`                      | 获取值并反序列化                       |
+| `get(key, clazz, supplier, ttl, unit)` | 获取值，缓存未命中时通过 supplier 加载 |
+| `getRange(key, start, end)`            | 获取字符串子串                         |
+| `getValueIsList(key, clazz)`           | 获取值并反序列化为 List                |
+| `set(key, object)`                     | 设置值（不过期）                       |
+| `set(key, object, ttl)`                | 设置值（秒级过期）                     |
+| `set(key, object, ttl, unit)`          | 设置值（指定时间单位过期）             |
+| `setIfAbsent(key, object)`             | SETNX 语义                             |
+| `multiSet(map)`                        | 批量设置                               |
+| `incrBy(key, increment)`               | 整数自增                               |
+| `incrByDouble(key, increment)`         | 浮点数自增                             |
+
+#### Key 操作
+
+| 方法                     | 说明                |
+| ------------------------ | ------------------- |
+| `hasKey(key)`            | 判断 key 是否存在   |
+| `del(key)`               | 删除 key            |
+| `del(keys)`              | 批量删除            |
+| `expire(key, ttl, unit)` | 设置过期时间        |
+| `getExpire(key)`         | 获取剩余过期时间    |
+| `keys(pattern)`          | 查找匹配的 key      |
+| `type(key)`              | 获取 key 的数据类型 |
+
+#### Hash 操作
+
+| 方法                                     | 说明                   |
+| ---------------------------------------- | ---------------------- |
+| `putHash(key, hashKey, value)`           | 设置 Hash 字段         |
+| `putHash(key, map)`                      | 批量设置 Hash 字段     |
+| `getForHash(key, hashKey, clazz)`        | 获取 Hash 字段值       |
+| `multiGetForHash(key, hashKeys, clazz)`  | 批量获取 Hash 字段     |
+| `getAllForHash(key, clazz)`              | 获取所有 Hash 字段值   |
+| `getAllMapForHash(key, clazz)`           | 获取完整 Hash Map      |
+| `hasKeyForHash(key, hashKey)`            | 判断 Hash 字段是否存在 |
+| `delForHash(key, hashKey)`               | 删除 Hash 字段         |
+| `incrByForHash(key, hashKey, increment)` | Hash 字段整数自增      |
+| `sizeForHash(key)`                       | 获取 Hash 字段数量     |
+
+#### List 操作
+
+| 方法                                   | 说明       |
+| -------------------------------------- | ---------- |
+| `leftPushForList(key, value)`          | 左端插入   |
+| `rightPushForList(key, value)`         | 右端插入   |
+| `leftPopForList(key, clazz)`           | 左端弹出   |
+| `rightPopForList(key, clazz)`          | 右端弹出   |
+| `indexForList(key, index, clazz)`      | 按索引获取 |
+| `rangeForList(key, start, end, clazz)` | 范围获取   |
+| `getAllForList(key, clazz)`            | 获取全部   |
+| `lenForList(key)`                      | 获取长度   |
+| `trimForList(key, start, end)`         | 裁剪列表   |
+
+#### Set 操作
+
+| 方法                                     | 说明         |
+| ---------------------------------------- | ------------ |
+| `addForSet(key, value)`                  | 添加元素     |
+| `removeForSet(key, value)`               | 移除元素     |
+| `isMemberForSet(key, value)`             | 判断是否包含 |
+| `sizeForSet(key)`                        | 获取大小     |
+| `membersForSet(key, clazz)`              | 获取所有元素 |
+| `intersectForSet(key, otherKey, clazz)`  | 交集         |
+| `unionForSet(key, otherKey, clazz)`      | 并集         |
+| `differenceForSet(key, otherKey, clazz)` | 差集         |
+
+#### SortedSet 操作
+
+| 方法                                             | 说明           |
+| ------------------------------------------------ | -------------- |
+| `addForSortedSet(key, value, score)`             | 添加元素       |
+| `getRangeForSortedSet(key, start, end, clazz)`   | 按排名范围获取 |
+| `rangeByScoreForSortedSet(key, min, max, clazz)` | 按分值范围获取 |
+| `rankForSortedSet(key, value)`                   | 获取排名       |
+| `scoreByValueForSortedSet(key, value)`           | 获取分值       |
+| `sizeForSortedSet(key)`                          | 获取大小       |
+| `incrementScoreForSortedSet(key, value, delta)`  | 增加分值       |
+
 
 ## 一、组件概述与功能定位
 
@@ -98,47 +182,11 @@ public class RedisCacheAutoConfig {
 
 使用 `@Qualifier("redisToolStringRedisTemplate")` 注入特定的 `StringRedisTemplate` Bean，说明项目中可能存在多个 Redis 数据源，此处明确指定使用名为 `redisToolStringRedisTemplate` 的那个。
 
-### 3.4 RedisCacheImpl — 核心实现
-
-基于 `StringRedisTemplate`，所有缓存值以 JSON 字符串存储。使用 Lombok `@AllArgsConstructor` 生成构造方法。
-
-**序列化策略：** 存入时判断对象类型，String 直接存入，其他对象通过 `JSON.toJSONString()` 转为 JSON 字符串：
-
-```java
-String json = object instanceof String ? (String) object : JSON.toJSONString(object);
-```
-
-**反序列化策略：** 通过 `getComplex` 和 `parseObjects` 两个私有方法完成，核心依赖 `CacheUtil.buildType()` 构建泛型类型。
-
-#### Redis 数据结构 API 一览
-
-**String 操作：**
-`get` / `getRange` / `getValueIsList` / `getKeys` / `set` / `setIfAbsent` / `size` / `multiSet` / `multiSetIfAbsent` / `incrBy` / `incrByDouble` / `append`
-
-**Key 通用操作：**
-`hasKey` / `del` / `expire` / `getExpire` / `keys` / `move` / `persist` / `randomKey` / `rename` / `renameIfAbsent` / `type`
-
-**Hash 操作：**
-`putHash` / `putHashIfAbsent` / `getForHash` / `getValueIsListForHash` / `multiGetForHash` / `getAllForHash` / `getAllMapForHash` / `hasKeyForHash` / `delForHash` / `incrByForHash` / `incrByDoubleForHash` / `hashKeysForHash` / `sizeForHash`
-
-**List 操作：**
-`indexForList` / `leftPushForList` / `leftPushAllForList` / `leftPushIfPresentForList` / `rightPushForList` / `rightPushAllForList` / `rightPushIfPresentForList` / `setForList` / `leftPopForList` / `leftPopBlockForList` / `rightPopForList` / `rightPopBlockForList` / `rightPopAndLeftPushForList` / `rightPopBlockAndLeftPushForList` / `getAllForList` / `rangeForList` / `removeForList` / `trimForList` / `lenForList`
-
-**Set 操作：**
-`addForSet` / `removeForSet` / `popForSet` / `moveForSet` / `sizeForSet` / `isMemberForSet` / `intersectForSet` / `intersectAndStoreForSet` / `unionForSet` / `unionAndStoreForSet` / `differenceForSet` / `membersForSet` / `randomMemberForSet` / `randomMembersForSet` / `distinctRandomMembersForSet` / `scanForSet`
-
-**SortedSet (ZSet) 操作：**
-`addForSortedSet` / `getRangeForSortedSet` / `getReverseRangeForSortedSet` / `delForSortedSet` / `delRangeForSortedSet` / `incrementScoreForSortedSet` / `sizeForSortedSet` / `rankForSortedSet` / `reverseRankForSortedSet` / `rangeWithScoreForSortedSet` / `rangeByScoreForSortedSet` / `rangeByScoreWithScoreForSortedSet` / `reverseRangeWithScoreForSortedSet` / `reverseRangeByScoreForSortedSet` / `reverseRangeByScoreWithScoreForSortedSet` / `countForSortedSet` / `zCardForSortedSet` / `scoreByValueForSortedSet` / `removeRangeForSortedSet` / `removeRangeByScoreForSortedSet` / `unionAndStoreForSortedSet` / `intersectAndStoreForSortedSet` / `scanForSortedSet`
-
-**特殊方法：**
-`getByType` — 根据 `java.lang.reflect.Type` 泛型类型反序列化（支持复杂泛型如 `List<User>`）
-`getInstance` — 返回底层 `StringRedisTemplate` 实例
-
-### 3.5 CacheUtil — 工具类（重点分析）
+### 3.4 CacheUtil — 工具类（重点分析）
 
 `CacheUtil` 提供三大类功能：**参数校验**、**类型构建**、**集合优化**。
 
-#### 3.5.1 `buildType` 方法与 `ParameterizedTypeImpl` 深度解析
+#### 3.4.1 `buildType` 方法与 `ParameterizedTypeImpl` 深度解析
 
 这是整个组件中最难理解的部分。先看代码：
 
@@ -258,7 +306,7 @@ return source instanceof String
 
 当 `clazz` 为 `User.class` 时，`buildType(User.class)` 返回一个 `ParameterizedTypeImpl`，fastjson 会根据这个类型信息将 JSON 字符串反序列化为 `User` 对象。
 
-#### 3.5.2 参数校验方法
+#### 3.4.2 参数校验方法
 
 | 方法 | 功能 | 抛出异常 |
 |------|------|----------|
@@ -271,7 +319,7 @@ return source instanceof String
 
 `isEmpty` 方法对三种类型做了特殊处理：`null` 返回 `true`，`String` 使用 `StrUtil.isEmpty` 判断，`Collection` 使用 `isEmpty()` 判断，其他类型返回 `false`。
 
-#### 3.5.3 集合优化方法
+#### 3.4.3 集合优化方法
 
 | 方法 | 功能 |
 |------|------|
