@@ -16,10 +16,12 @@
     <name>hgs-mq-consumer-framework</name>
     <description>mq消费者封装</description>
 
-    <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>com.hgs</groupId>
+            <artifactId>hgs-mq-common-framework</artifactId>
+            <version>${revision}</version>
+        </dependency>
+    </dependencies>
     
 </project>
