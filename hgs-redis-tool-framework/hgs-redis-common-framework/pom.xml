@@ -42,7 +42,7 @@
 
         <dependency>
             <groupId>com.hgs</groupId>
-            <artifactId>hgs-redis-framework</artifactId>
+            <artifactId>hgs-common</artifactId>
             <version>${revision}</version>
         </dependency>
     </dependencies>

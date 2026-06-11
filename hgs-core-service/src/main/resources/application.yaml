@@ -1,0 +1,104 @@
+server:
+  port: 8085
+spring:
+  application:
+    name: hgs-service
+  main:
+    allow-bean-definition-overriding: true # 允许bean定义覆盖
+    allow-circular-references: true # 允许循环引用
+  datasource:
+    driver-class-name: org.apache.shardingsphere.driver.ShardingSphereDriver
+    url: jdbc:shardingsphere:classpath:shardingsphere.yaml
+  data:
+    redis:
+      database: 0
+      host: 127.0.0.1
+      port: 6379
+      password: 123456
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher #功能：使用通配符模式（如 /**, *）匹配 URL 路径,兼容传统 Spring MVC 的路径匹配方式，而非默认的 PathPatternParser
+    servlet:
+      load-on-startup: 1 #设置 Servlet 在应用启动时立即加载，而非首次请求时懒加载,1 表示优先级为正数，数值越小优先级越高
+  jackson:
+    default-property-inclusion: non_null # JSON处理时忽略非空字段
+    time-zone: GMT+8
+    date-format: yyyy-MM-dd HH:mm:ss
+    generator:
+      WRITE_NUMBERS_AS_STRINGS: true # JSON处理时将数字类型转为字符串
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      acks: all
+      retries: 5
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      properties: #保证生产者的可靠性
+        enable.idempotence: true # 保证消息的幂等性 生产者防止网络重试导致重复写入
+        max.in.flight.requests.per.connection: 5 # 兼顾消息的顺序和速度 最多同时发出5批消息，第6批需等第1批确认后才能发出
+    consumer:
+      #默认的消费组ID
+      group-id: create_voucher_order
+      #是否自动提交offset
+      enable-auto-commit: false
+      # 当kafka中没有初始offset或offset超出范围时将自动重置offset
+      # earliest:重置为分区中最小的offset;
+      # latest:重置为分区中最新的offset(消费分区中新产生的数据);
+      # none:只要有一个分区不存在已提交的offset,就抛出异常;
+      auto-offset-reset: latest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    listener:
+      # 消费端，手动立即确认模式，需业务代码显式调用acknowledge()提交offset，确保消息处理成功后才消费，防止消息丢失
+      ack-mode: manual_immediate
+mybatis-plus:
+  type-aliases-package: com.hiddengemstore.entity # 别名扫描包
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 打印sql
+    local-cache-scope: statement # 关闭MyBatis一级缓存，每次查询都从数据库获取最新数据，确保数据实时性，适用于读写频繁场景
+logging:
+  level:
+    com.hiddengemstore: info # 设置业务包日志级别为INFO，平衡性能与可观测性，生产环境避免DEBUG影响性能
+    AUDIT: info # 审计日志级别设为INFO，记录关键业务操作如用户登录、订单创建等，满足合规要求
+  pattern:
+    dateformat: mm:ss.SSS
+# 布隆过滤器配置
+bloom-filter:
+  filters:
+    shop:
+      name: shop-id-bloom
+      expected-insertions: 50000
+      false-probability: 0.01
+    voucher:
+      name: voucher-id-bloom
+      expected-insertions: 100000
+      false-probability: 0.01
+
+# Spring Boot Actuator 监控配置：
+management:
+  endpoints:
+    web:
+      exposure:
+        # 暴露监控端点：prometheus采集指标、health健康检查、info应用信息，用于Grafana监控和K8s探针
+        include: "prometheus,health,info"
+  prometheus:
+    metrics:
+      export:
+        # 启用Prometheus指标导出，将JVM、HTTP请求等指标暴露给Prometheus采集，支持可视化监控和告警
+        enabled: true
+
+
+# knife4j配置
+knife4j:
+  enable: true
+  openapi:
+    contact:
+      name: ZhaoJH
+      url: http://localhost:8085
+    version: 1.0.0
+  group:
+    default:
+      group-name: default
+      api-rule: package
+      api-rule-resources:
+        - com.hiddengemstore.controller

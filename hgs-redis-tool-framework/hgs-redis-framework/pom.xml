@@ -40,11 +40,6 @@
             <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.hgs</groupId>
-            <artifactId>hgs-common</artifactId>
-            <version>${revision}</version>
-        </dependency>
 
         <dependency>
             <groupId>com.hgs</groupId>
