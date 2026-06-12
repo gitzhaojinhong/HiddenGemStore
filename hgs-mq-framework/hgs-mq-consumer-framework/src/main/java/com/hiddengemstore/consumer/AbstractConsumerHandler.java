@@ -25,6 +25,9 @@ import java.util.Objects;
 @RequiredArgsConstructor// 只为 final 字段 和 @NonNull 字段 生成构造器
 public abstract class AbstractConsumerHandler<T> {
 
+    /**
+     * 业务载荷类型，用于将 JSON 中的 messageBody 反序列化为具体类型
+     */
     private final Class<T> payloadType;
 
 

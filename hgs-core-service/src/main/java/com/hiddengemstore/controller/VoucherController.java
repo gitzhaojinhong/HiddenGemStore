@@ -2,8 +2,10 @@ package com.hiddengemstore.controller;
 
 import com.hiddengemstore.entity.dto.GetSeckillVoucherDto;
 import com.hiddengemstore.entity.dto.Result;
+import com.hiddengemstore.entity.dto.UpdateSeckillVoucherDto;
 import com.hiddengemstore.entity.model.SeckillVoucherFullModel;
 import com.hiddengemstore.service.ISeckillVoucherService;
+import com.hiddengemstore.service.IVoucherService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
@@ -23,6 +25,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class VoucherController {
     @Resource
     private ISeckillVoucherService seckillVoucherService;
+    @Resource
+    private IVoucherService voucherService;
 
 
     /**
@@ -34,5 +38,12 @@ public class VoucherController {
     @PostMapping("/get")
     public Result<SeckillVoucherFullModel> get(@Valid @RequestBody GetSeckillVoucherDto getSeckillVoucherDto){//@Valid 触发参数校验
         return Result.ok(seckillVoucherService.queryByVoucherId(getSeckillVoucherDto.getVoucherId()));
+    }
+
+
+    @PostMapping("/update/seckill")
+    public Result<Void> updateSeckillVoucher(@Valid @RequestBody UpdateSeckillVoucherDto updateSeckillVoucherDto){
+        voucherService.updateSeckillVoucher(updateSeckillVoucherDto);
+        return Result.ok();
     }
 }
