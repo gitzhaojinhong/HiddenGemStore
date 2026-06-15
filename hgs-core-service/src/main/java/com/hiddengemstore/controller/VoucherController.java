@@ -40,7 +40,11 @@ public class VoucherController {
         return Result.ok(seckillVoucherService.queryByVoucherId(getSeckillVoucherDto.getVoucherId()));
     }
 
-
+    /**
+     * 更新秒杀优惠券
+     * @param updateSeckillVoucherDto 更新秒杀优惠券参数
+     * @return 更新结果
+     */
     @PostMapping("/update/seckill")
     public Result<Void> updateSeckillVoucher(@Valid @RequestBody UpdateSeckillVoucherDto updateSeckillVoucherDto){
         voucherService.updateSeckillVoucher(updateSeckillVoucherDto);

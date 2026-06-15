@@ -6,6 +6,7 @@ package com.hiddengemstore.constant;
  * @author : ZhaoJH
  **/
 public class RepeatExecuteLimitConstants {
-    
+
+    // 秒杀券订单,防止重复下单
     public static final String SECKILL_VOUCHER_ORDER = "seckill_voucher_order";
 }

@@ -8,4 +8,6 @@ import jakarta.validation.Valid;
 
 public interface ISeckillVoucherService extends IService<SeckillVoucher> {
     SeckillVoucherFullModel queryByVoucherId(Long voucherId);
+
+    void loadVoucherStock(Long voucherId);
 }

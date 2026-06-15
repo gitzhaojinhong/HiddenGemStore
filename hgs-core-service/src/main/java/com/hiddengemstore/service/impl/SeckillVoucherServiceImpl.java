@@ -7,7 +7,6 @@ import com.hiddengemstore.cache.SeckillVoucherLocalCache;
 import com.hiddengemstore.constant.Constant;
 import com.hiddengemstore.entity.SeckillVoucher;
 import com.hiddengemstore.entity.Voucher;
-import com.hiddengemstore.entity.dto.GetSeckillVoucherDto;
 import com.hiddengemstore.entity.model.SeckillVoucherFullModel;
 import com.hiddengemstore.enums.RedisKeyManage;
 import com.hiddengemstore.executor.ServiceLockExecutor;
@@ -20,17 +19,19 @@ import com.hiddengemstore.redis.api.RedisCache;
 import com.hiddengemstore.redis.internal.RedisKeyBuild;
 import com.hiddengemstore.service.ISeckillVoucherService;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-import static com.hiddengemstore.Constants.RedisConstants.CACHE_NULL_TTL;
-import static com.hiddengemstore.Constants.RedisConstants.LOCK_SECKILL_VOUCHER_KEY;
+import static com.hiddengemstore.Constants.RedisConstants.*;
 import static com.hiddengemstore.constant.Constant.BLOOM_FILTER_HANDLER_VOUCHER;
 import static com.hiddengemstore.constant.DistributedLockConstants.UPDATE_SECKILL_VOUCHER_LOCK;
+import static com.hiddengemstore.constant.DistributedLockConstants.UPDATE_SECKILL_VOUCHER_STOCK_LOCK;
 
+@Slf4j
 @Service
 public class SeckillVoucherServiceImpl extends ServiceImpl<SeckillVoucherMapper, SeckillVoucher> implements ISeckillVoucherService {
     @Resource
@@ -62,6 +63,9 @@ public class SeckillVoucherServiceImpl extends ServiceImpl<SeckillVoucherMapper,
      * 7. 查询数据库，不存在则缓存空值并抛异常
      * 8. 存在则组装数据，设置TTL为剩余有效时间，写入Redis和本地缓存
      * 9. 释放锁
+     * 加读写锁原因：
+     *  因为秒杀优惠券的更新操作（如改库存、改状态）很频繁，且缓存可能是直接更新而非删除。
+     *  如果查询和更新并发，可能出现：查询线程读到旧数据 → 更新线程写入新缓存 → 查询线程又把旧数据覆盖回去。读写锁保证了读-读并发、读-写互斥。
      */
     @Override
     @ServiceLock(lockType = LockType.Read,name = UPDATE_SECKILL_VOUCHER_LOCK,keys = "#voucherId")
@@ -86,7 +90,7 @@ public class SeckillVoucherServiceImpl extends ServiceImpl<SeckillVoucherMapper,
             return seckillVoucherFullModel;
         }
         // 布隆滤器判断
-        if (!bloomFilterHandlerFactory.get(Constant.BLOOM_FILTER_HANDLER_VOUCHER).contains(String.valueOf(voucherId))) {
+        if (!bloomFilterHandlerFactory.get(BLOOM_FILTER_HANDLER_VOUCHER).contains(String.valueOf(voucherId))) {
             throw new RuntimeException("秒杀券不存在");
         }
         // 空值判断，解决缓存穿透
@@ -135,6 +139,50 @@ public class SeckillVoucherServiceImpl extends ServiceImpl<SeckillVoucherMapper,
             seckillVoucherLocalCache.put(seckillVoucherRedisKey.getRelKey(), seckillVoucherFullModel);
             return seckillVoucherFullModel;
         } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    @ServiceLock(lockType= LockType.Read,name = UPDATE_SECKILL_VOUCHER_STOCK_LOCK,keys = {"#voucherId"})
+    public void loadVoucherStock(Long voucherId) {
+        // 步骤1：布隆过滤器校验优惠券是否存在
+        if (!bloomFilterHandlerFactory.get(Constant.BLOOM_FILTER_HANDLER_VOUCHER).contains(String.valueOf(voucherId))) {
+            log.info("加载库存 布隆过滤器判断不存在 秒杀优惠券id : {}",voucherId);
+            throw new RuntimeException("查询秒杀优惠券不存在");
+        }
+        
+        // 步骤2：首次检查Redis缓存，避免重复加载
+        String stock = redisCache.get(RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_STOCK_TAG_KEY, voucherId), String.class);
+        if (Objects.nonNull(stock)) {
+            return;
+        }
+        
+        // 步骤3：获取分布式锁，防止并发加载
+        RLock lock = serviceLockExecutor.getLock(LockType.Reentrant, LOCK_SECKILL_VOUCHER_STOCK_KEY, new String[]{String.valueOf(voucherId)});
+        lock.lock();
+        try {
+            // 步骤4：双重检查，防止重复加载
+            stock = redisCache.get(RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_STOCK_TAG_KEY, voucherId), String.class);
+            if (Objects.nonNull(stock)) {
+                return;
+            }
+            
+            // 步骤5：从数据库查询优惠券信息并加载到Redis
+            SeckillVoucher seckillVoucher = lambdaQuery().eq(SeckillVoucher::getVoucherId, voucherId).one();
+            if (Objects.isNull(seckillVoucher)) {
+                long ttlSeconds = Math.max(
+                        LocalDateTimeUtil.between(LocalDateTimeUtil.now(), seckillVoucher.getEndTime()).getSeconds(),
+                        1L
+                );
+                redisCache.set(
+                        RedisKeyBuild.createRedisKey(RedisKeyManage.SECKILL_STOCK_TAG_KEY, voucherId),
+                        String.valueOf(seckillVoucher.getStock()),
+                        ttlSeconds,
+                        TimeUnit.SECONDS
+                );
+            }
+        }finally {
             lock.unlock();
         }
     }

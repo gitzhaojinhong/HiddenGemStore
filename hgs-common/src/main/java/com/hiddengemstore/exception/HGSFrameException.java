@@ -9,7 +9,7 @@ import lombok.EqualsAndHashCode;
  * 业务异常
  * @author : ZhaoJH
  **/
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true)//继承父类属性
 @Data
 public class HGSFrameException extends BaseException {
 	

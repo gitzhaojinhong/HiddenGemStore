@@ -12,6 +12,8 @@ public class DistributedLockConstants {
      * 秒杀券更新锁
      */
     public final static String UPDATE_SECKILL_VOUCHER_LOCK = "hgs_update_seckill_voucher_lock";
-    
+    /**
+     * 秒杀券库存更新锁
+     */
     public final static String UPDATE_SECKILL_VOUCHER_STOCK_LOCK = "hgs_update_seckill_voucher_stock_lock";
 }

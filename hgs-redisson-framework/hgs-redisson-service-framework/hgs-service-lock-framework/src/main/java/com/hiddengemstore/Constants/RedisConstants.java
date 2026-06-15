@@ -11,16 +11,18 @@ public interface RedisConstants {
     Long LOGIN_USER_TTL = 36000L;
     // 空值过期时间
     Long CACHE_NULL_TTL = 2L;
-
+    /* 商店key过期时间 */
     Long CACHE_SHOP_TTL = 30L;
     String CACHE_SHOP_KEY = "cache:shop:";
 
+    /* 商店锁 */
     String LOCK_SHOP_KEY = "lock:shop:";
     Long LOCK_SHOP_TTL = 10L;
 
     // 秒杀券锁
     String LOCK_SECKILL_VOUCHER_KEY = "lock_seckill_voucher";
 
+    /* 秒杀券库存锁 */
     String LOCK_SECKILL_VOUCHER_STOCK_KEY = "lock_seckill_voucher_stock";
 
     String SECKILL_STOCK_KEY = "seckill:stock:";
