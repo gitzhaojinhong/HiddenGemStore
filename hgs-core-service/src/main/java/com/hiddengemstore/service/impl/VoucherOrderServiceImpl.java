@@ -151,6 +151,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         //如果存在，则直接结束运行
         if (Objects.nonNull(normalVoucherOrder)) {
             log.warn("已存在此订单，voucherId：{},userId：{}", normalVoucherOrder.getVoucherId(), userId);
+            // 抛出异常，异常的错误码与状态码一致，这样消费失败后执行afterConsumeFailure失败钩子回滚时，就不需要从已购买优惠卷集合中移除用户
             throw new HGSFrameException(BaseCode.VOUCHER_ORDER_EXIST);
         }
         //扣减库存
