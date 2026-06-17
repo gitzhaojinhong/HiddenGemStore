@@ -1,13 +1,13 @@
 package com.hiddengemstore.controller;
 
 import com.hiddengemstore.entity.dto.Result;
+import com.hiddengemstore.enums.RateLimitScene;
+import com.hiddengemstore.execute.RateLimitHandler;
+import com.hiddengemstore.service.ISeckillAccessTokenService;
 import com.hiddengemstore.service.IVoucherOrderService;
 import com.hiddengemstore.uitls.UserHolder;
 import jakarta.annotation.Resource;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * 优惠券订单控制器
@@ -18,6 +18,21 @@ import org.springframework.web.bind.annotation.RestController;
 public class VoucherOrderController {
     @Resource
     private IVoucherOrderService voucherOrderService;
+    @Resource
+    private RateLimitHandler rateLimitHandler;
+    @Resource
+    private ISeckillAccessTokenService accessTokenService;
+
+
+    @GetMapping("/seckill/token/{id}")
+    public Result<String> issueSeckillAccessToken(@PathVariable("id") Long voucherId) {
+        Long userId = UserHolder.getUser().getId();
+        // 限流
+        rateLimitHandler.execute(voucherId, userId, RateLimitScene.ISSUE_TOKEN);
+        // 生成申请访问令牌（获得操作权限）
+        String token = accessTokenService.issueAccessToken(voucherId, userId);
+        return Result.ok(token);
+    }
 
 
     /**
@@ -26,8 +41,18 @@ public class VoucherOrderController {
      * @return 订单ID
      */
     @PostMapping("/seckill/{id}")
-    public Result<Long> seckillVoucher(@PathVariable("id") Long voucherId) {
+    public Result<Long> seckillVoucher(@PathVariable("id") Long voucherId,
+                                       @RequestParam(name = "accessToken", required = false) String accessToken) {
         Long userId = UserHolder.getUser().getId();
+        // 限流
+        rateLimitHandler.execute(voucherId, userId, RateLimitScene.SECKILL_ORDER);
+        // 若访问令牌功能启用，则消费访问令牌
+        if (accessTokenService.isEnabled()) {
+            if (accessToken == null || !accessTokenService.validateAndConsume(voucherId, userId, accessToken)) {
+                return Result.fail("令牌校验失败或令牌已失效");
+            }
+        }
+        // 通过限流和访问令牌消费后，才能下单
         return voucherOrderService.seckillVoucher(voucherId,userId);
     }
 }
