@@ -34,6 +34,6 @@ public class SeckillVoucherMessage {
     // 扣减后库存数量
     private Integer afterQty;
 
-    // 是否自动发放(true-自动发券,false-手动领取)
+    // 是否在回滚后自动发放(true-自动发券,false-手动领取)
     private Boolean autoIssue;
 }
